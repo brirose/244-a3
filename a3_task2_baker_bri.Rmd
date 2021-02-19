@@ -1,0 +1,78 @@
+---
+title: "California Cetaceans"
+author: "Bri Baker"
+date: "2/19/2021"
+output: 
+  html_document:
+    theme: cosmo
+    code_folding: hide
+    highlight: kate
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      warning = FALSE)
+library(raster)
+library(tidyverse)
+library(sf)
+library(here)
+library(rnaturalearth)
+library(fasterize)
+
+```
+
+```{r cetacean data}
+
+#load data from file and convert to raster in a stack
+ca_cet <- list.files(path = here("part2_data/ca_cetaceans"),
+                     full.names = TRUE) %>% 
+  raster::stack()
+
+
+plot(ca_cet)
+```
+
+```{r basemap}
+# make basemap of coastline in defined area
+basemap <- ne_coastline(scale = "small",
+                        returnclass = "sf"
+                        )
+
+```
+
+
+```{r richness}
+# define presence/absence in tribble
+presence <- tribble(~from, ~to, ~value,
+                    0, 0.6, 0,
+                    0.6, 1, 1)
+
+# reclass rasters to presence/absence
+ca_cet_present <- reclassify(ca_cet,
+                             presence) %>% 
+  replace_na(replace = 0)
+
+# sum stack to find richness, `raster::calc()` can be faster than `sum()`
+ca_cet_rich <- calc(ca_cet_present,
+                    fun = sum,
+                    na.rm = FALSE)
+
+```
+
+```{r map}
+# make ggplot-able
+ca_richness <- raster::rasterToPoints(ca_cet_rich) %>%
+  as.data.frame() %>% 
+  rename("richness" = "layer")
+
+# plot
+ggplot()+
+  geom_raster(data = ca_richness, aes(x = x, 
+                                      y = y, 
+                                      fill = richness)) +
+  geom_sf(data = basemap) +
+  coord_sf(xlim = c(-125, -115), ylim = c(32, 38))
+
+```
+
