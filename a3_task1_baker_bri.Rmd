@@ -84,6 +84,7 @@ ggplot(data = spill_county) +
   labs(fill = "Oil spill frequency",
        title = "Inland oil spill frequency per California county in 2008",
        caption = "Bri Baker, 2021 \nData: Lampinen and Conway, 2009") +
+  theme_void()+
   theme(legend.position = c(0.75, 0.8), # move legend
         legend.background = element_rect(fill="white", 
                                          linetype = "solid", color = "whitesmoke"))
