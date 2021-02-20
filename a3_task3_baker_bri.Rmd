@@ -1,0 +1,66 @@
+---
+title: "Word Analysis"
+author: "Bri Baker"
+date: "2/19/2021"
+output: 
+  html_document:
+    theme: cosmo
+    code_folding: hide
+    highlight: kate
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = FALSE,
+                      warning = FALSE)
+
+library(tidyverse)
+library(tidytext)
+library(textdata)
+library(pdftools)
+library(ggwordcloud)
+
+```
+
+```{r data}
+# import text from pdf file
+schultz_2019 <- pdf_text("Schultz et al_2019_Forest Service fire management and the elusiveness of change.pdf") %>% 
+  data.frame() %>% # make df
+  rename("text_full" = ".") %>% 
+  mutate(text_full = str_remove_all(text_full, "[[:punct:]]"),  # remove punctuation
+         text_full = str_remove_all(text_full, "[[:digit:]]"),
+         text_full = str_squish(text_full), # remove interior white space
+         text_full = tolower(text_full),  # make lowercase
+         text_full = str_remove(text_full, "fire management"), # remove paper subject string
+         text_full = str_remove(text_full, "forest service"), # remove paper subject string
+         text_full = str_split(text_full, pattern = " ")) %>% # split into lists at space
+  unnest(text_full) %>% # make individual rows
+  rename("word" = "text_full")
+
+  
+```
+
+```{r stop words}
+
+citation <- tribble(~word,
+                    "https", "org", "doi", "et", "al") # tokens from citations
+
+schultz_nonstop <- schultz_2019 %>% 
+  anti_join(stop_words) %>% # remove general stop words
+  anti_join(citation) # remove specific unwanted words
+  
+
+```
+
+```{r counts}
+
+schultz_counts <- schultz_nonstop %>% 
+  count(word) %>% 
+  slice(-(1:292))
+
+top_10 <- schultz_counts %>% 
+  slice_max(order_by = n, n = 10 )
+
+
+```
+
