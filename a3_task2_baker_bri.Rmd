@@ -38,11 +38,12 @@ ca_cet <- list.files(path = here("part2_data/ca_cetaceans"),
 
 ```{r basemap}
 # make basemap of coastline in defined area
-coastline <- ne_coastline(scale = "small",
+coastline <- ne_coastline(scale = 10,
                         returnclass = "sf"
                         )
 
 ```
+
 ```{r richness}
 # define presence/absence in tribble
 presence <- tribble(~from, ~to, ~value,
@@ -56,6 +57,7 @@ ca_cet_present <- reclassify(ca_cet, presence)
 ca_cet_rich <- sum(ca_cet_present, na.rm = TRUE)
 
 ```
+
 
 ## Species Richness
 
@@ -71,8 +73,10 @@ ggplot()+
                                       y = y, 
                                       fill = richness)) +
   geom_sf(data = coastline) +
-  coord_sf(xlim = c(-125, -115), ylim = c(32, 38))+
-  scale_fill_gradient(low = 'white', high = 'cornflowerblue') +
+  coord_sf(xlim = c(-125, -115), 
+           ylim = c(32, 38))+
+  scale_fill_gradient(low = 'white', 
+                      high = 'cornflowerblue') +
   labs(fill = "Richness",
        title = "California cetacean species richness",
        caption = "Bri Baker, 2021\nData: Kaschner et al., 2016") +
